@@ -32,6 +32,8 @@ body {
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  position: relative;
+  z-index: 10;
 }
 
 .tab-button {
@@ -43,6 +45,14 @@ body {
   color: #e5e7eb;
   font-size: 14px;
   cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  background: #1f2937;
+  border-color: #374151;
 }
 
 .tab-button.active {
