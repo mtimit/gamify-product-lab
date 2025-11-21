@@ -1,5 +1,4 @@
-<!-- Простой прототип интерфейса. -->
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
@@ -13,67 +12,108 @@
       <p>Мини-игра по созданию проектов, которые приносят деньги</p>
     </header>
 
+    <nav class="tabs">
+      <button class="tab-button active" data-screen="dashboard">Dashboard</button>
+      <button class="tab-button" data-screen="projects">Projects</button>
+      <button class="tab-button" data-screen="experiments">Experiments</button>
+    </nav>
+
     <main class="app-main">
-      <section class="dashboard">
-        <h2>Дашборд</h2>
-        <div class="dashboard-stats">
-          <div class="stat">
-            <span class="label">Уровень</span>
-            <span class="value" id="level">-</span>
+      <!-- SCREEN: DASHBOARD -->
+      <section id="screen-dashboard" class="screen active">
+        <section class="dashboard">
+          <h2>Дашборд</h2>
+          <div class="dashboard-stats">
+            <div class="stat">
+              <span class="label">Уровень</span>
+              <span class="value" id="level">-</span>
+            </div>
+            <div class="stat">
+              <span class="label">XP</span>
+              <span class="value"><span id="xp">-</span> / <span id="xpToNext">-</span></span>
+            </div>
+            <div class="stat">
+              <span class="label">Streak (дней)</span>
+              <span class="value" id="streak">-</span>
+            </div>
+            <div class="stat">
+              <span class="label">Общий доход, $</span>
+              <span class="value" id="totalRevenue">0.00</span>
+            </div>
           </div>
-          <div class="stat">
-            <span class="label">XP</span>
-            <span class="value"><span id="xp">-</span> / <span id="xpToNext">-</span></span>
-          </div>
-          <div class="stat">
-            <span class="label">Streak (дней)</span>
-            <span class="value" id="streak">-</span>
-          </div>
-          <div class="stat">
-            <span class="label">Общий доход, $</span>
-            <span class="value" id="totalRevenue">0.00</span>
-          </div>
-        </div>
 
-        <div class="achievements">
-          <h3>Ачивки</h3>
-          <ul id="achievementsList"></ul>
-        </div>
+          <div class="achievements">
+            <h3>Ачивки</h3>
+            <ul id="achievementsList"></ul>
+          </div>
+        </section>
       </section>
 
-      <section class="panel">
-        <h2>Проекты</h2>
-        <form id="projectForm" class="form-inline">
-          <input
-            id="projectName"
-            type="text"
-            placeholder="Название проекта / идеи"
-            required
-          />
-          <button type="submit">Добавить идею</button>
-        </form>
+      <!-- SCREEN: PROJECTS -->
+      <section id="screen-projects" class="screen">
+        <section class="panel">
+          <h2>Проекты</h2>
+          <form id="projectForm" class="form-inline">
+            <input
+              id="projectName"
+              type="text"
+              placeholder="Название проекта / идеи"
+              required
+            />
+            <button type="submit">Добавить идею</button>
+          </form>
 
-        <div id="projectsList" class="projects-list"></div>
+          <div id="projectsList" class="projects-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Обновить доход</h2>
+          <form id="revenueForm" class="form-inline">
+            <select id="revenueProject"></select>
+            <input
+              id="revenueAmount"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="Сумма, $"
+              required
+            />
+            <button type="submit">Добавить</button>
+          </form>
+        </section>
       </section>
 
-      <section class="panel">
-        <h2>Обновить доход</h2>
-        <form id="revenueForm" class="form-inline">
-          <select id="revenueProject"></select>
-          <input
-            id="revenueAmount"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Сумма, $"
-            required
-          />
-          <button type="submit">Добавить</button>
-        </form>
+      <!-- SCREEN: EXPERIMENTS -->
+      <section id="screen-experiments" class="screen">
+        <section class="panel">
+          <h2>Эксперименты</h2>
+          <form id="experimentForm" class="form-column">
+            <select id="experimentProject" required>
+              <option value="">Выбери проект</option>
+            </select>
+            <select id="experimentType">
+              <option value="landing_test">Landing test</option>
+              <option value="ad_creative">Ad creative</option>
+              <option value="pricing">Pricing</option>
+              <option value="feature_test">Feature test</option>
+              <option value="generic">Generic</option>
+            </select>
+            <input
+              id="experimentHypothesis"
+              type="text"
+              placeholder="Краткая гипотеза"
+              required
+            />
+            <button type="submit">Создать эксперимент</button>
+          </form>
+
+          <div id="experimentsList" class="experiments-list"></div>
+        </section>
       </section>
     </main>
   </div>
 
-  <script type="module" src="./src/app.js"></script>
+  <!-- ВАЖНО: app.js лежит рядом с index.html, без папки src -->
+  <script type="module" src="./app.js"></script>
 </body>
 </html>

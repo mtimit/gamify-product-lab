@@ -20,22 +20,54 @@ body {
 
 .app-header {
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .app-header h1 {
   margin: 0 0 4px;
 }
 
+/* Табы (экраны) */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tab-button {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 999px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background: #22c55e;
+  color: #022c22;
+  font-weight: 600;
+  border-color: #22c55e;
+}
+
 .app-main {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  grid-template-rows: auto auto;
+  display: flex;
+  flex-direction: column;
   gap: 16px;
 }
 
+/* Экраны */
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+}
+
 .dashboard {
-  grid-column: 1 / 3;
   background: #111827;
   padding: 16px;
   border-radius: 12px;
@@ -83,6 +115,7 @@ body {
   padding: 16px;
   border-radius: 12px;
   border: 1px solid #1f2937;
+  margin-bottom: 12px;
 }
 
 .form-inline {
@@ -91,8 +124,17 @@ body {
   margin-bottom: 12px;
 }
 
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .form-inline input,
-.form-inline select {
+.form-inline select,
+.form-column input,
+.form-column select {
   flex: 1;
   padding: 8px;
   border-radius: 8px;
@@ -101,7 +143,8 @@ body {
   color: #e5e7eb;
 }
 
-.form-inline button {
+.form-inline button,
+.form-column button {
   padding: 8px 12px;
   border-radius: 8px;
   border: none;
@@ -111,34 +154,40 @@ body {
   cursor: pointer;
 }
 
-.form-inline button:hover {
+.form-inline button:hover,
+.form-column button:hover {
   background: #16a34a;
 }
 
-.projects-list {
+.projects-list,
+.experiments-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.project-card {
+.project-card,
+.experiment-card {
   padding: 10px 12px;
   border-radius: 10px;
   background: #020617;
   border: 1px solid #1f2937;
 }
 
-.project-header {
+.project-header,
+.experiment-header {
   font-weight: 600;
   margin-bottom: 4px;
 }
 
-.project-meta {
+.project-meta,
+.experiment-meta {
   font-size: 13px;
   margin-bottom: 4px;
 }
 
-.project-meta select {
+.project-meta select,
+.experiment-meta select {
   margin-left: 4px;
   font-size: 12px;
   padding: 2px 4px;
@@ -153,13 +202,9 @@ body {
   color: #9ca3af;
 }
 
+/* Мобильная адаптация по минимуму */
 @media (max-width: 768px) {
-  .app-main {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-  }
-
-  .dashboard {
-    grid-column: 1 / 2;
+  .stat {
+    flex: 1 1 calc(50% - 12px);
   }
 }
