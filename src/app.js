@@ -8,11 +8,36 @@ import {
   createExperiment,
   updateExperiment,
   createQuest,
-  completeQuest
+  completeQuest,
+  addHypothesis,
+  validateHypothesis,
+  addInsight,
+  updateIdeaScore,
+  createDistributionExperiment,
+  updateDistributionExperiment,
+  addDistributionInsight
 } from "./models.js";
 import { loadState, saveState } from "./storage.js";
 import { awardXpForAction, initializeDefaultQuests } from "./gameLogic.js";
 import { renderXpChart, renderRevenueChart, renderProgressBar } from "./charts.js";
+import {
+  calculateStageVelocity,
+  calculateMVPTime,
+  calculateExperimentsPerWeek,
+  calculateOverallMetrics,
+  getExperimentsMap,
+  getProjectReport
+} from "./analytics.js";
+import {
+  calculateOverallGrowthMetrics,
+  analyzeByChannel,
+  getBestChannels,
+  getWorstChannels,
+  compareCreatives,
+  analyzeViralMetrics,
+  getDistributionInsights,
+  analyzeCohortRetention
+} from "./growthAnalytics.js";
 
 let state = null;
 let currentProjectFilter = "";
@@ -48,6 +73,7 @@ function normalizeState() {
   if (!state.experiments) state.experiments = [];
   if (!state.achievements) state.achievements = [];
   if (!state.quests) state.quests = [];
+  if (!state.distributionExperiments) state.distributionExperiments = [];
   if (!state.gameProfile.xpBoost) state.gameProfile.xpBoost = 1.0;
   
   // Инициализируем дефолтные квесты если их нет
@@ -90,6 +116,8 @@ function renderAll() {
   renderProjects();
   renderExperiments();
   renderQuests();
+  renderAnalytics();
+  renderGrowthDashboard();
   updateProjectSelects();
 }
 
@@ -470,6 +498,341 @@ function renderQuests() {
   });
 }
 
+// --- Analytics ---
+
+function renderAnalytics() {
+  // Общие метрики
+  const metrics = calculateOverallMetrics(state);
+  
+  const metricsContainer = $("#overallMetrics");
+  if (metricsContainer) {
+    metricsContainer.innerHTML = `
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-label">Всего проектов</div>
+          <div class="metric-value">${metrics.totalProjects}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Активных проектов</div>
+          <div class="metric-value">${metrics.activeProjects}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Запущено</div>
+          <div class="metric-value">${metrics.launchedProjects}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Всего экспериментов</div>
+          <div class="metric-value">${metrics.totalExperiments}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Завершено экспериментов</div>
+          <div class="metric-value">${metrics.completedExperiments}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Экспериментов в неделю</div>
+          <div class="metric-value">${metrics.experimentsPerWeek}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Среднее время MVP</div>
+          <div class="metric-value">${metrics.avgMVPTime > 0 ? metrics.avgMVPTime + ' дней' : 'N/A'}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Экспериментов на проект</div>
+          <div class="metric-value">${metrics.avgExperimentsPerProject.toFixed(1)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Топ идей по рейтингу
+  const topIdeasContainer = $("#topIdeas");
+  if (topIdeasContainer) {
+    if (metrics.topRatedIdeas.length === 0) {
+      topIdeasContainer.innerHTML = '<p class="empty-state">Нет идей для оценки. Создайте проекты со статусом "idea".</p>';
+    } else {
+      topIdeasContainer.innerHTML = metrics.topRatedIdeas.map((idea, index) => `
+        <div class="idea-ranking-card">
+          <div class="ranking-position">#${index + 1}</div>
+          <div class="ranking-info">
+            <div class="ranking-name">${idea.name}</div>
+            <div class="ranking-score">Рейтинг: ${idea.score}</div>
+          </div>
+          <button class="view-project-btn" data-project-id="${idea.id}">Подробнее</button>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Список проектов с деталями
+  renderProjectsList();
+}
+
+function renderProjectsList() {
+  const projectsListContainer = $("#analyticsProjectsList");
+  if (!projectsListContainer) return;
+
+  if (state.projects.length === 0) {
+    projectsListContainer.innerHTML = '<p class="empty-state">Проектов пока нет</p>';
+    return;
+  }
+
+  projectsListContainer.innerHTML = state.projects.map(project => {
+    const mvpTime = calculateMVPTime(project);
+    const expMap = getExperimentsMap(state, project.id);
+    
+    return `
+      <div class="analytics-project-card">
+        <div class="project-card-header">
+          <h4>${project.name}</h4>
+          <span class="status-badge status-${project.status}">${project.status}</span>
+        </div>
+        <div class="project-card-body">
+          <div class="project-metrics-row">
+            <div class="mini-metric">
+              <span class="mini-label">Рейтинг идеи:</span>
+              <span class="mini-value">${project.ideaScore.totalScore}</span>
+            </div>
+            <div class="mini-metric">
+              <span class="mini-label">Время MVP:</span>
+              <span class="mini-value">${mvpTime !== null ? mvpTime + ' д.' : 'N/A'}</span>
+            </div>
+            <div class="mini-metric">
+              <span class="mini-label">Экспериментов:</span>
+              <span class="mini-value">${expMap.total}</span>
+            </div>
+            <div class="mini-metric">
+              <span class="mini-label">Гипотез:</span>
+              <span class="mini-value">${project.hypotheses.length}</span>
+            </div>
+          </div>
+          <button class="view-project-report-btn" data-project-id="${project.id}">📊 Полный отчёт</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function showProjectReport(projectId) {
+  const report = getProjectReport(state, projectId);
+  if (!report) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="modal-content project-report-modal">
+      <div class="modal-header">
+        <h2>${report.project.name}</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Основная информация -->
+        <section class="report-section">
+          <h3>📌 Основная информация</h3>
+          <div class="report-info-grid">
+            <div><strong>Статус:</strong> ${report.project.status}</div>
+            <div><strong>Создан:</strong> ${new Date(report.project.createdAt).toLocaleDateString()}</div>
+            <div><strong>Доход:</strong> $${report.project.revenue}</div>
+          </div>
+        </section>
+
+        <!-- Рейтинг идеи -->
+        <section class="report-section">
+          <h3>⭐ Рейтинг идеи: ${report.ideaScore.totalScore}</h3>
+          <div class="score-breakdown">
+            <div class="score-item">
+              <span>Ценность проблемы:</span>
+              <span>${report.ideaScore.problemValue}/10</span>
+            </div>
+            <div class="score-item">
+              <span>Масштабируемость:</span>
+              <span>${report.ideaScore.scalability}/10</span>
+            </div>
+            <div class="score-item">
+              <span>Время разработки:</span>
+              <span>${report.ideaScore.developmentTime}/10</span>
+            </div>
+          </div>
+          <button class="edit-score-btn" data-project-id="${projectId}">✏️ Редактировать рейтинг</button>
+        </section>
+
+        <!-- Скорость прохождения стадий -->
+        <section class="report-section">
+          <h3>⏱️ Скорость прохождения стадий</h3>
+          ${Object.keys(report.stageVelocity).length > 0 ? `
+            <div class="velocity-list">
+              ${Object.entries(report.stageVelocity).map(([stage, days]) => `
+                <div class="velocity-item">
+                  <span class="stage-name">${stage}:</span>
+                  <span class="stage-days">${days} дней</span>
+                </div>
+              `).join('')}
+            </div>
+          ` : '<p>Нет данных о переходах между стадиями</p>'}
+        </section>
+
+        <!-- MVP время -->
+        ${report.mvpTime !== null ? `
+          <section class="report-section">
+            <h3>🚀 Время до MVP</h3>
+            <div class="mvp-time-display">${report.mvpTime} дней</div>
+          </section>
+        ` : ''}
+
+        <!-- Карта экспериментов -->
+        <section class="report-section">
+          <h3>🧪 Эксперименты (${report.experiments.total})</h3>
+          <div class="experiments-stats">
+            <div class="exp-stat">Planned: ${report.experiments.byStatus.planned}</div>
+            <div class="exp-stat">Running: ${report.experiments.byStatus.running}</div>
+            <div class="exp-stat">Completed: ${report.experiments.byStatus.completed}</div>
+            <div class="exp-stat">Canceled: ${report.experiments.byStatus.canceled}</div>
+          </div>
+          <div class="success-rate">Success Rate: ${report.experiments.successRate}%</div>
+        </section>
+
+        <!-- Гипотезы -->
+        <section class="report-section">
+          <h3>💡 Гипотезы (${report.hypotheses.length})</h3>
+          ${report.hypotheses.length > 0 ? `
+            <div class="hypotheses-list">
+              ${report.hypotheses.map(h => `
+                <div class="hypothesis-item ${h.validated ? 'validated' : ''}">
+                  <div class="hypothesis-text">${h.text}</div>
+                  ${h.validated ? `
+                    <div class="hypothesis-result ${h.result}">${h.result === 'success' ? '✅ Подтверждено' : '❌ Отклонено'}</div>
+                  ` : `
+                    <div class="hypothesis-actions">
+                      <button class="validate-btn" data-project-id="${projectId}" data-hypothesis-id="${h.id}" data-result="success">✅ Подтвердить</button>
+                      <button class="validate-btn" data-project-id="${projectId}" data-hypothesis-id="${h.id}" data-result="failure">❌ Отклонить</button>
+                    </div>
+                  `}
+                </div>
+              `).join('')}
+            </div>
+          ` : '<p>Гипотез пока нет</p>'}
+          <button class="add-hypothesis-btn" data-project-id="${projectId}">➕ Добавить гипотезу</button>
+        </section>
+
+        <!-- Insights -->
+        <section class="report-section">
+          <h3>📝 Что узнали</h3>
+          <div class="insights-container">
+            <div class="insight-block">
+              <h4>✅ Что сработало</h4>
+              ${report.insights.whatWorked.length > 0 ? `
+                <ul>${report.insights.whatWorked.map(i => `<li>${i}</li>`).join('')}</ul>
+              ` : '<p class="empty">Пока нет записей</p>'}
+              <button class="add-insight-btn" data-project-id="${projectId}" data-type="whatWorked">➕ Добавить</button>
+            </div>
+            <div class="insight-block">
+              <h4>❌ Что не сработало</h4>
+              ${report.insights.whatDidntWork.length > 0 ? `
+                <ul>${report.insights.whatDidntWork.map(i => `<li>${i}</li>`).join('')}</ul>
+              ` : '<p class="empty">Пока нет записей</p>'}
+              <button class="add-insight-btn" data-project-id="${projectId}" data-type="whatDidntWork">➕ Добавить</button>
+            </div>
+            <div class="insight-block">
+              <h4>🎓 Ключевые выводы</h4>
+              ${report.insights.keyLearnings.length > 0 ? `
+                <ul>${report.insights.keyLearnings.map(i => `<li>${i}</li>`).join('')}</ul>
+              ` : '<p class="empty">Пока нет записей</p>'}
+              <button class="add-insight-btn" data-project-id="${projectId}" data-type="keyLearnings">➕ Добавить</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Timeline -->
+        <section class="report-section">
+          <h3>📅 Timeline</h3>
+          ${report.timeline.length > 0 ? `
+            <div class="timeline">
+              ${report.timeline.map(entry => `
+                <div class="timeline-entry">
+                  <div class="timeline-date">${new Date(entry.date).toLocaleDateString()}</div>
+                  <div class="timeline-event">${entry.event}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : '<p>Нет событий</p>'}
+        </section>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  // Закрытие модального окна
+  modal.querySelector('.modal-close').addEventListener('click', () => {
+    modal.remove();
+  });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+
+  // Обработчики для кнопок в модальном окне
+  setupReportModalHandlers(modal, projectId);
+}
+
+function setupReportModalHandlers(modal, projectId) {
+  // Валидация гипотез
+  modal.querySelectorAll('.validate-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const hypothesisId = btn.dataset.hypothesisId;
+      const result = btn.dataset.result;
+      validateHypothesis(state, projectId, hypothesisId, result);
+      saveState(state);
+      modal.remove();
+      showProjectReport(projectId);
+    });
+  });
+
+  // Добавление гипотезы
+  modal.querySelector('.add-hypothesis-btn')?.addEventListener('click', () => {
+    const text = prompt('Введите гипотезу:');
+    if (text && text.trim()) {
+      addHypothesis(state, projectId, text.trim());
+      saveState(state);
+      modal.remove();
+      showProjectReport(projectId);
+    }
+  });
+
+  // Добавление insight
+  modal.querySelectorAll('.add-insight-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      const text = prompt('Введите наблюдение:');
+      if (text && text.trim()) {
+        addInsight(state, projectId, type, text.trim());
+        saveState(state);
+        modal.remove();
+        showProjectReport(projectId);
+      }
+    });
+  });
+
+  // Редактирование рейтинга
+  modal.querySelector('.edit-score-btn')?.addEventListener('click', () => {
+    const project = state.projects.find(p => p.id === projectId);
+    if (!project) return;
+
+    const problemValue = prompt('Ценность проблемы (1-10):', project.ideaScore.problemValue);
+    const scalability = prompt('Масштабируемость (1-10):', project.ideaScore.scalability);
+    const developmentTime = prompt('Скорость разработки (1-10):', project.ideaScore.developmentTime);
+
+    if (problemValue && scalability && developmentTime) {
+      updateIdeaScore(state, projectId, {
+        problemValue: parseInt(problemValue),
+        scalability: parseInt(scalability),
+        developmentTime: parseInt(developmentTime)
+      });
+      saveState(state);
+      modal.remove();
+      showProjectReport(projectId);
+    }
+  });
+}
+
 // --- Event handlers ---
 
 function setupEventHandlers() {
@@ -614,4 +977,273 @@ function setupEventHandlers() {
       renderQuests();
     });
   });
+
+  // Analytics - View project report
+  document.addEventListener("click", (e) => {
+    if (e.target.classList.contains("view-project-report-btn")) {
+      const projectId = e.target.dataset.projectId;
+      showProjectReport(projectId);
+    }
+    
+    if (e.target.classList.contains("view-project-btn")) {
+      const projectId = e.target.dataset.projectId;
+      showProjectReport(projectId);
+    }
+  });
+
+  // Growth - Distribution experiments
+  const distributionForm = $("#distributionForm");
+  if (distributionForm) {
+    distributionForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      
+      createDistributionExperiment(state, {
+        channel: formData.get("channel"),
+        name: formData.get("name"),
+        description: formData.get("description"),
+        type: formData.get("type"),
+        metrics: {
+          budget: parseFloat(formData.get("budget")) || 0,
+          spent: parseFloat(formData.get("spent")) || 0,
+          installs: parseInt(formData.get("installs")) || 0,
+          impressions: parseInt(formData.get("impressions")) || 0,
+          clicks: parseInt(formData.get("clicks")) || 0,
+          retentionR1: parseFloat(formData.get("retentionR1")) || 0,
+          retentionR7: parseFloat(formData.get("retentionR7")) || 0,
+          retentionR30: parseFloat(formData.get("retentionR30")) || 0,
+          arpu: parseFloat(formData.get("arpu")) || 0,
+          ltv: parseFloat(formData.get("ltv")) || 0,
+          kFactor: parseFloat(formData.get("kFactor")) || 0
+        }
+      });
+
+      awardXpForAction(state, "create_distribution_experiment");
+      saveState(state);
+      renderAll();
+      e.target.reset();
+    });
+  }
+}
+
+// --- Growth Dashboard ---
+
+function renderGrowthDashboard() {
+  const growthMetricsEl = $("#growthMetrics");
+  const channelAnalysisEl = $("#channelAnalysis");
+  const distributionListEl = $("#distributionList");
+  
+  if (!growthMetricsEl || !channelAnalysisEl || !distributionListEl) return;
+
+  // Overall growth metrics
+  const overallMetrics = calculateOverallGrowthMetrics(state);
+  
+  growthMetricsEl.innerHTML = `
+    <div class="growth-stats">
+      <div class="stat">
+        <span class="label">Всего экспериментов</span>
+        <span class="value">${overallMetrics.totalExperiments}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Всего установок</span>
+        <span class="value">${overallMetrics.totalInstalls}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Потрачено</span>
+        <span class="value">$${overallMetrics.totalSpent.toFixed(2)}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Средний CPI</span>
+        <span class="value">$${overallMetrics.avgCPI.toFixed(2)}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Retention R1</span>
+        <span class="value">${overallMetrics.avgRetentionR1.toFixed(1)}%</span>
+      </div>
+      <div class="stat">
+        <span class="label">Retention R7</span>
+        <span class="value">${overallMetrics.avgRetentionR7.toFixed(1)}%</span>
+      </div>
+      <div class="stat">
+        <span class="label">Retention R30</span>
+        <span class="value">${overallMetrics.avgRetentionR30.toFixed(1)}%</span>
+      </div>
+      <div class="stat">
+        <span class="label">Средний ARPU</span>
+        <span class="value">$${overallMetrics.avgARPU.toFixed(2)}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Средний LTV</span>
+        <span class="value">$${overallMetrics.avgLTV.toFixed(2)}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Overall ROI</span>
+        <span class="value ${overallMetrics.overallROI > 0 ? 'positive' : 'negative'}">
+          ${overallMetrics.overallROI.toFixed(1)}%
+        </span>
+      </div>
+      <div class="stat">
+        <span class="label">Прибыльных каналов</span>
+        <span class="value">${overallMetrics.profitableChannels}</span>
+      </div>
+      <div class="stat">
+        <span class="label">Средний k-factor</span>
+        <span class="value ${overallMetrics.avgKFactor > 1 ? 'positive' : ''}">
+          ${overallMetrics.avgKFactor.toFixed(2)}
+        </span>
+      </div>
+    </div>
+  `;
+
+  // Channel analysis
+  const channelData = analyzeByChannel(state);
+  const bestChannels = getBestChannels(state);
+  const worstChannels = getWorstChannels(state);
+  
+  let channelHTML = '<h3>📊 Анализ каналов</h3>';
+  
+  if (bestChannels.length > 0) {
+    channelHTML += '<div class="channel-section"><h4>🏆 Лучшие каналы</h4><div class="channel-list">';
+    bestChannels.forEach(ch => {
+      channelHTML += `
+        <div class="channel-card best">
+          <div class="channel-name">${getChannelLabel(ch.channel)}</div>
+          <div class="channel-stats">
+            <span>ROI: <strong class="positive">${ch.roi.toFixed(1)}%</strong></span>
+            <span>Installs: ${ch.installs}</span>
+            <span>CPI: $${ch.avgCPI.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+    });
+    channelHTML += '</div></div>';
+  }
+  
+  if (worstChannels.length > 0) {
+    channelHTML += '<div class="channel-section"><h4>⚠️ Требуют оптимизации</h4><div class="channel-list">';
+    worstChannels.forEach(ch => {
+      channelHTML += `
+        <div class="channel-card worst">
+          <div class="channel-name">${getChannelLabel(ch.channel)}</div>
+          <div class="channel-stats">
+            <span>ROI: <strong class="negative">${ch.roi.toFixed(1)}%</strong></span>
+            <span>Installs: ${ch.installs}</span>
+            <span>CPI: $${ch.avgCPI.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+    });
+    channelHTML += '</div></div>';
+  }
+
+  // All channels table
+  if (channelData.length > 0) {
+    channelHTML += '<div class="channel-section"><h4>Все каналы</h4><table class="channel-table"><thead><tr>';
+    channelHTML += '<th>Канал</th><th>Эксперименты</th><th>Установки</th><th>Потрачено</th>';
+    channelHTML += '<th>CPI</th><th>R1</th><th>R7</th><th>ARPU</th><th>LTV</th><th>ROI</th></tr></thead><tbody>';
+    
+    channelData.forEach(ch => {
+      channelHTML += `
+        <tr>
+          <td><strong>${getChannelLabel(ch.channel)}</strong></td>
+          <td>${ch.experiments}</td>
+          <td>${ch.installs}</td>
+          <td>$${ch.spent.toFixed(2)}</td>
+          <td>$${ch.avgCPI.toFixed(2)}</td>
+          <td>${ch.avgRetentionR1.toFixed(1)}%</td>
+          <td>${ch.avgRetentionR7.toFixed(1)}%</td>
+          <td>$${ch.avgARPU.toFixed(2)}</td>
+          <td>$${ch.avgLTV.toFixed(2)}</td>
+          <td class="${ch.roi > 0 ? 'positive' : 'negative'}">${ch.roi.toFixed(1)}%</td>
+        </tr>
+      `;
+    });
+    channelHTML += '</tbody></table></div>';
+  }
+
+  channelAnalysisEl.innerHTML = channelHTML;
+
+  // Distribution experiments list
+  if (state.distributionExperiments.length === 0) {
+    distributionListEl.innerHTML = '<p class="empty-state">Пока нет distribution experiments. Создайте первый!</p>';
+  } else {
+    let listHTML = '';
+    state.distributionExperiments.forEach(exp => {
+      const statusClass = exp.status === 'completed' ? 'completed' : 
+                         exp.status === 'running' ? 'running' : 'planning';
+      
+      listHTML += `
+        <div class="distribution-card ${statusClass}">
+          <div class="distribution-header">
+            <h4>${exp.name}</h4>
+            <span class="channel-badge">${getChannelLabel(exp.channel)}</span>
+          </div>
+          <p class="distribution-description">${exp.description}</p>
+          <div class="distribution-metrics">
+            <div class="metric">
+              <span class="metric-label">Budget</span>
+              <span class="metric-value">$${exp.metrics.budget.toFixed(2)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Spent</span>
+              <span class="metric-value">$${exp.metrics.spent.toFixed(2)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">Installs</span>
+              <span class="metric-value">${exp.metrics.installs}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">CPI</span>
+              <span class="metric-value">$${exp.metrics.cpi.toFixed(2)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">R1</span>
+              <span class="metric-value">${exp.metrics.retentionR1.toFixed(1)}%</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">R7</span>
+              <span class="metric-value">${exp.metrics.retentionR7.toFixed(1)}%</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">ARPU</span>
+              <span class="metric-value">$${exp.metrics.arpu.toFixed(2)}</span>
+            </div>
+            <div class="metric">
+              <span class="metric-label">LTV</span>
+              <span class="metric-value">$${exp.metrics.ltv.toFixed(2)}</span>
+            </div>
+          </div>
+          <div class="distribution-footer">
+            <span class="status-badge ${statusClass}">${getStatusLabel(exp.status)}</span>
+            <span class="date">Создан: ${new Date(exp.createdAt).toLocaleDateString()}</span>
+          </div>
+        </div>
+      `;
+    });
+    distributionListEl.innerHTML = listHTML;
+  }
+}
+
+function getChannelLabel(channel) {
+  const labels = {
+    organic: '🌱 Organic',
+    influencer: '👤 Influencer',
+    ppc: '💰 PPC',
+    aso: '🔍 ASO',
+    viral_loop: '🔄 Viral Loop',
+    reddit: '🟠 Reddit',
+    tiktok_ads: '🎵 TikTok Ads'
+  };
+  return labels[channel] || channel;
+}
+
+function getStatusLabel(status) {
+  const labels = {
+    planning: 'Планирование',
+    running: 'В процессе',
+    completed: 'Завершен',
+    paused: 'На паузе',
+    failed: 'Неудачный'
+  };
+  return labels[status] || status;
 }

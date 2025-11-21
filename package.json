@@ -1,8 +1,26 @@
 {
   "name": "gamify-product-lab",
-  "version": "1.2.0",
-  "description": "Мини-игра по созданию проектов, которые приносят деньги",
+  "version": "2.0.0",
+  "description": "Мини-игра по созданию проектов, которые приносят деньги + система дистрибуции и роста",
   "features": {
+    "v2.0": [
+      "Distribution Experiments (TikTok Ads, Reddit, ASO, Viral loops)",
+      "Growth Dashboard с метриками роста",
+      "Полная система метрик: CPI, CPM, Retention R1/R7/R30, ARPU, LTV, k-factor",
+      "Автоматический расчёт ROI и derived metrics",
+      "Анализ каналов (best/worst по ROI)",
+      "Сравнение креативов для paid ads",
+      "5 новых достижений для growth",
+      "App Mafia insights integration"
+    ],
+    "v1.3": [
+      "Автоматические метрики (скорость стадий, время MVP, эксперименты/неделю)",
+      "Система гипотез с валидацией",
+      "Insights (что сработало/не сработало/ключевые выводы)",
+      "Рейтинг идей по 3 критериям",
+      "Детальные отчёты по проектам",
+      "Новая вкладка Analytics"
+    ],
     "v1.2": [
       "Система квестов",
       "Автоматические квесты при старте",
@@ -27,7 +45,24 @@
       "localStorage сохранение"
     ]
   },
-  "files": {
+  "files": [
+    "index.html",
+    "test.html",
+    "styles.css",
+    "src/app.js",
+    "src/models.js",
+    "src/gameLogic.js",
+    "src/storage.js",
+    "src/analytics.js",
+    "src/growthAnalytics.js",
+    "src/charts.js",
+    "README.md",
+    "CHANGELOG.md",
+    "QUICKSTART.md",
+    "DEBUG.md",
+    "USAGE.md"
+  ],
+  "deprecated_files_structure": {
     "html": ["index.html", "test.html"],
     "css": ["styles.css"],
     "js": [
@@ -35,6 +70,8 @@
       "src/models.js",
       "src/gameLogic.js",
       "src/storage.js",
+      "src/analytics.js",
+      "src/growthAnalytics.js",
       "src/charts.js"
     ],
     "docs": [

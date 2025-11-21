@@ -17,6 +17,8 @@
       <button class="tab-button" data-screen="projects">Projects</button>
       <button class="tab-button" data-screen="experiments">Experiments</button>
       <button class="tab-button" data-screen="quests">Quests</button>
+      <button class="tab-button" data-screen="analytics">Analytics</button>
+      <button class="tab-button" data-screen="growth">Growth</button>
     </nav>
 
     <main class="app-main">
@@ -174,6 +176,100 @@
           </div>
 
           <div id="questsList" class="quests-list"></div>
+        </section>
+      </section>
+
+      <!-- SCREEN: ANALYTICS -->
+      <section id="screen-analytics" class="screen">
+        <!-- Общие метрики -->
+        <section class="panel">
+          <h2>📊 Аналитика</h2>
+          <div id="overallMetrics"></div>
+        </section>
+
+        <!-- Топ идей по рейтингу -->
+        <section class="panel">
+          <h3>⭐ Топ идей по рейтингу</h3>
+          <div id="topIdeas"></div>
+        </section>
+
+        <!-- Список проектов с деталями -->
+        <section class="panel">
+          <h3>📁 Проекты</h3>
+          <div id="analyticsProjectsList"></div>
+        </section>
+      </section>
+
+      <!-- SCREEN: GROWTH -->
+      <section id="screen-growth" class="screen">
+        <!-- Overall Growth Metrics -->
+        <section class="panel">
+          <h2>🚀 Growth Dashboard</h2>
+          <div id="growthMetrics"></div>
+        </section>
+
+        <!-- Channel Analysis -->
+        <section class="panel">
+          <div id="channelAnalysis"></div>
+        </section>
+
+        <!-- Create Distribution Experiment -->
+        <section class="panel">
+          <h3>➕ Новый Distribution Experiment</h3>
+          <form id="distributionForm" class="form-column">
+            <input type="text" name="name" placeholder="Название эксперимента" required />
+            <textarea name="description" placeholder="Описание" rows="2"></textarea>
+            
+            <select name="channel" required>
+              <option value="">Выбери канал</option>
+              <option value="tiktok_ads">🎵 TikTok Ads</option>
+              <option value="reddit">🟠 Reddit</option>
+              <option value="aso">🔍 ASO</option>
+              <option value="viral_loop">🔄 Viral Loop</option>
+              <option value="influencer">👤 Influencer</option>
+              <option value="ppc">💰 PPC</option>
+              <option value="organic">🌱 Organic</option>
+            </select>
+
+            <select name="type" required>
+              <option value="">Тип эксперимента</option>
+              <option value="paid">💰 Paid</option>
+              <option value="content">📝 Content</option>
+              <option value="aso">🔍 ASO</option>
+              <option value="viral">🔄 Viral</option>
+            </select>
+
+            <div class="form-row">
+              <input type="number" name="budget" placeholder="Budget ($)" step="0.01" />
+              <input type="number" name="spent" placeholder="Spent ($)" step="0.01" />
+            </div>
+
+            <div class="form-row">
+              <input type="number" name="installs" placeholder="Installs" />
+              <input type="number" name="impressions" placeholder="Impressions" />
+              <input type="number" name="clicks" placeholder="Clicks" />
+            </div>
+
+            <div class="form-row">
+              <input type="number" name="retentionR1" placeholder="R1 (%)" step="0.1" />
+              <input type="number" name="retentionR7" placeholder="R7 (%)" step="0.1" />
+              <input type="number" name="retentionR30" placeholder="R30 (%)" step="0.1" />
+            </div>
+
+            <div class="form-row">
+              <input type="number" name="arpu" placeholder="ARPU ($)" step="0.01" />
+              <input type="number" name="ltv" placeholder="LTV ($)" step="0.01" />
+              <input type="number" name="kFactor" placeholder="k-factor" step="0.01" />
+            </div>
+
+            <button type="submit">Создать эксперимент</button>
+          </form>
+        </section>
+
+        <!-- Distribution Experiments List -->
+        <section class="panel">
+          <h3>📋 Distribution Experiments</h3>
+          <div id="distributionList"></div>
         </section>
       </section>
     </main>

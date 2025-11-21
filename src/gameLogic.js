@@ -85,6 +85,18 @@ export function recomputeAchievements(state) {
     e => e.status === "completed"
   ).length;
 
+  // Growth metrics
+  const distributionExperiments = state.distributionExperiments || [];
+  const asoExperiments = distributionExperiments.filter(e => e.channel === 'aso');
+  const paidExperiments = distributionExperiments.filter(e => e.type === 'paid');
+  const totalInstalls = distributionExperiments.reduce((sum, e) => sum + (e.metrics.installs || 0), 0);
+  const viralLoops = distributionExperiments.filter(e => e.channel === 'viral_loop');
+  const profitableChannels = distributionExperiments.filter(e => {
+    const revenue = e.metrics.installs * e.metrics.arpu;
+    const roi = e.metrics.spent > 0 ? ((revenue - e.metrics.spent) / e.metrics.spent) * 100 : 0;
+    return roi > 0 && e.status === 'completed';
+  });
+
   const earnedIds = new Set(profile.achievements);
 
   state.achievements.forEach(ach => {
@@ -107,6 +119,21 @@ export function recomputeAchievements(state) {
         break;
       case "experiments_completed":
         conditionMet = completedExperiments >= ach.thresholdValue;
+        break;
+      case "aso_test_completed":
+        conditionMet = asoExperiments.length >= ach.thresholdValue;
+        break;
+      case "ad_creatives_tested":
+        conditionMet = paidExperiments.length >= ach.thresholdValue;
+        break;
+      case "total_installs":
+        conditionMet = totalInstalls >= ach.thresholdValue;
+        break;
+      case "viral_loop_launched":
+        conditionMet = viralLoops.length >= ach.thresholdValue;
+        break;
+      case "profitable_channel":
+        conditionMet = profitableChannels.length >= ach.thresholdValue;
         break;
       default:
         break;
@@ -136,7 +163,8 @@ const ACTION_XP_MAP = {
   update_project_status: 20,
   complete_experiment: 50,
   add_revenue: 0, // отдельная формула
-  add_note: 5
+  add_note: 5,
+  create_distribution_experiment: 30
 };
 
 export function awardXpForAction(state, action, payload = {}) {
