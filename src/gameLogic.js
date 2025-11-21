@@ -13,8 +13,15 @@ export function calculateXpToNextLevel(level) {
 export function gainXp(state, amount, source = "unknown") {
   if (amount <= 0) return;
 
-  state.gameProfile.xp += amount;
-  logEvent(state, { type: "xp_gain", value: amount, source });
+  // Применяем XP boost
+  const boostedAmount = Math.round(amount * (state.gameProfile.xpBoost || 1.0));
+  state.gameProfile.xp += boostedAmount;
+  logEvent(state, { 
+    type: "xp_gain", 
+    value: boostedAmount, 
+    source,
+    metadata: { originalAmount: amount, boost: state.gameProfile.xpBoost }
+  });
 
   // level up
   let leveledUp = false;
@@ -150,4 +157,118 @@ export function awardXpForAction(state, action, payload = {}) {
 
   // пересчёт ачивок на каждом значимом действии
   recomputeAchievements(state);
+  
+  // проверка прогресса квестов
+  updateQuestsProgress(state, action, payload);
+}
+
+// --- Quests system ---
+
+import { createQuest, completeQuest, updateQuest } from "./models.js";
+
+// Автосоздание дефолтных квестов
+export function initializeDefaultQuests(state) {
+  // Проверяем, есть ли уже квесты
+  if (state.quests && state.quests.length > 0) return;
+  
+  // Создаём стартовые квесты
+  const defaultQuests = [
+    {
+      title: "Первый эксперимент",
+      description: "Запусти один новый эксперимент за 48 часов",
+      type: "timed",
+      targetProgress: 1,
+      reward: { xp: 100, xpBoost: 0 },
+      deadline: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+      conditions: { action: "create_experiment", count: 1 }
+    },
+    {
+      title: "Путь к запуску",
+      description: "Доведи проект до стадии launched за неделю",
+      type: "timed",
+      targetProgress: 1,
+      reward: { xp: 200, xpBoost: 0.1 },
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      conditions: { action: "project_launched", count: 1 }
+    },
+    {
+      title: "Генератор идей",
+      description: "Создай 3 новых проекта",
+      type: "milestone",
+      targetProgress: 3,
+      reward: { xp: 150, xpBoost: 0 },
+      deadline: null,
+      conditions: { action: "create_project", count: 3 }
+    }
+  ];
+  
+  defaultQuests.forEach(quest => createQuest(state, quest));
+}
+
+// Обновление прогресса квестов
+export function updateQuestsProgress(state, action, payload = {}) {
+  if (!state.quests) return;
+  
+  const now = Date.now();
+  
+  state.quests.forEach(quest => {
+    if (quest.status !== "active") return;
+    
+    // Проверка срока действия
+    if (quest.deadline) {
+      const deadline = new Date(quest.deadline).getTime();
+      if (now > deadline) {
+        quest.status = "expired";
+        quest.updatedAt = new Date().toISOString();
+        logEvent(state, {
+          type: "quest_expired",
+          value: 0,
+          source: quest.id,
+          metadata: { questTitle: quest.title }
+        });
+        return;
+      }
+    }
+    
+    // Проверка условий квеста
+    const conditions = quest.conditions;
+    let progressIncreased = false;
+    
+    if (conditions.action === action || 
+        (conditions.action === "project_launched" && action === "update_project_status" && payload.newStatus === "launched")) {
+      quest.progress += 1;
+      progressIncreased = true;
+      updateQuest(state, quest.id, { progress: quest.progress });
+      
+      logEvent(state, {
+        type: "quest_progress",
+        value: quest.progress,
+        source: quest.id,
+        metadata: { 
+          questTitle: quest.title,
+          progress: quest.progress,
+          target: quest.targetProgress
+        }
+      });
+    }
+    
+    // Проверка завершения
+    if (quest.progress >= quest.targetProgress) {
+      completeQuest(state, quest.id);
+      
+      // Выдаём награду
+      if (quest.reward.xp > 0) {
+        gainXp(state, quest.reward.xp, `quest:${quest.id}`);
+      }
+      if (quest.reward.xpBoost > 0) {
+        state.gameProfile.xpBoost = (state.gameProfile.xpBoost || 1.0) + quest.reward.xpBoost;
+        logEvent(state, {
+          type: "xp_boost_gained",
+          value: quest.reward.xpBoost,
+          source: quest.id,
+          metadata: { newBoost: state.gameProfile.xpBoost }
+        });
+      }
+    }
+  });
 }

@@ -1,0 +1,70 @@
+{
+  "name": "gamify-product-lab",
+  "version": "1.2.0",
+  "description": "Мини-игра по созданию проектов, которые приносят деньги",
+  "features": {
+    "v1.2": [
+      "Система квестов",
+      "Автоматические квесты при старте",
+      "Временные и milestone квесты",
+      "XP Boost множитель",
+      "Улучшенные достижения с авто-выдачей"
+    ],
+    "v1.1": [
+      "График XP за 7 дней",
+      "График дохода за 6 месяцев",
+      "Quick Actions на дашборде",
+      "Event Log (лента действий)",
+      "Фильтры для проектов",
+      "Новая вкладка Quests"
+    ],
+    "v1.0": [
+      "4 экрана: Dashboard, Projects, Experiments, Quests",
+      "Создание проектов и экспериментов",
+      "Система XP и уровней",
+      "Достижения",
+      "Streak система",
+      "localStorage сохранение"
+    ]
+  },
+  "files": {
+    "html": ["index.html", "test.html"],
+    "css": ["styles.css"],
+    "js": [
+      "src/app.js",
+      "src/models.js",
+      "src/gameLogic.js",
+      "src/storage.js",
+      "src/charts.js"
+    ],
+    "docs": [
+      "README.md",
+      "CHANGELOG.md",
+      "QUICKSTART.md",
+      "DEBUG.md",
+      "USAGE.md"
+    ]
+  },
+  "requirements": {
+    "browser": "Modern browser with ES6 modules support",
+    "server": "Local web server (Live Server recommended)"
+  },
+  "author": "Gamify Product Lab Team",
+  "license": "MIT",
+  "repository": {
+    "type": "local",
+    "path": "c:\\Users\\hollo\\Documents\\gamify-product-lab"
+  },
+  "scripts": {
+    "start": "Open with Live Server in VS Code",
+    "test": "Open test.html in browser"
+  },
+  "keywords": [
+    "gamification",
+    "product-management",
+    "productivity",
+    "quests",
+    "achievements",
+    "xp-system"
+  ]
+}

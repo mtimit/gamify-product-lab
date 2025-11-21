@@ -212,9 +212,327 @@ body {
   color: #9ca3af;
 }
 
+/* Quick Actions */
+.quick-actions {
+  margin-bottom: 16px;
+}
+
+.quick-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quick-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #1f2937;
+  color: #e5e7eb;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-btn:hover {
+  background: #374151;
+  transform: translateY(-2px);
+}
+
+/* Charts */
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 16px;
+  margin: 16px 0;
+}
+
+.chart-wrapper {
+  background: #020617;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #1f2937;
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.chart-title {
+  font-size: 14px;
+  fill: #e5e7eb;
+  font-weight: 600;
+}
+
+.chart-value {
+  font-size: 11px;
+  fill: #e5e7eb;
+}
+
+.chart-label {
+  font-size: 10px;
+  fill: #9ca3af;
+}
+
+/* Event Log */
+.event-log {
+  margin-top: 16px;
+}
+
+.event-log h3 {
+  margin: 8px 0;
+}
+
+#eventLogList {
+  background: #020617;
+  border-radius: 8px;
+  padding: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin: 4px 0;
+  border-radius: 6px;
+  background: #111827;
+  font-size: 13px;
+}
+
+.event-icon {
+  font-size: 16px;
+}
+
+.event-text {
+  flex: 1;
+  color: #e5e7eb;
+}
+
+.event-time {
+  color: #9ca3af;
+  font-size: 11px;
+}
+
+/* Active Quests Preview */
+.active-quests-preview {
+  margin: 16px 0;
+}
+
+.active-quests-preview h3 {
+  margin: 8px 0;
+}
+
+#activeQuestsPreview {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.quest-card-mini {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px;
+  background: #020617;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quest-card-mini:hover {
+  border-color: #22c55e;
+  transform: translateY(-2px);
+}
+
+.quest-card-mini .quest-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #e5e7eb;
+}
+
+/* Progress Bar */
+.progress-bar {
+  position: relative;
+  height: 20px;
+  background: #020617;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #374151;
+  margin: 8px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 600;
+  color: #e5e7eb;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Filters */
+.filters {
+  margin: 12px 0;
+}
+
+.filters select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Quest Tabs */
+.quests-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quest-tab {
+  flex: 1;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quest-tab:hover {
+  background: #1f2937;
+}
+
+.quest-tab.active {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+/* Quest Cards */
+.quests-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quest-card {
+  padding: 16px;
+  background: #020617;
+  border: 2px solid #1f2937;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.quest-card.quest-active {
+  border-color: #3b82f6;
+}
+
+.quest-card.quest-completed {
+  border-color: #22c55e;
+  opacity: 0.8;
+}
+
+.quest-card.quest-expired {
+  border-color: #ef4444;
+  opacity: 0.6;
+}
+
+.quest-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.quest-header h4 {
+  margin: 0;
+  font-size: 16px;
+  color: #e5e7eb;
+}
+
+.quest-badge {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.quest-badge.quest-timed {
+  background: #ef4444;
+  color: white;
+}
+
+.quest-badge.quest-milestone {
+  background: #3b82f6;
+  color: white;
+}
+
+.quest-description {
+  font-size: 13px;
+  color: #9ca3af;
+  margin: 8px 0;
+}
+
+.quest-deadline {
+  font-size: 12px;
+  color: #f59e0b;
+  margin: 8px 0;
+}
+
+.quest-reward {
+  font-size: 13px;
+  color: #22c55e;
+  font-weight: 600;
+  margin: 8px 0;
+}
+
+.quest-completed {
+  font-size: 14px;
+  color: #22c55e;
+  font-weight: 600;
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 6px;
+}
+
 /* Мобильная адаптация по минимуму */
 @media (max-width: 768px) {
   .stat {
     flex: 1 1 calc(50% - 12px);
+  }
+  
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .quick-buttons {
+    flex-direction: column;
+  }
+  
+  .quick-btn {
+    min-width: 100%;
   }
 }

@@ -12,7 +12,7 @@ export function createInitialState() {
   const now = new Date().toISOString();
 
   return {
-    version: "1.0",
+    version: "1.2",
     gameProfile: {
       id: "user-001",
       level: 1,
@@ -22,12 +22,14 @@ export function createInitialState() {
       lastActivityDate: null, // ISO string (yyyy-mm-dd)
       achievements: [],
       totalRevenue: 0,
+      xpBoost: 1.0, // множитель XP (для наград)
       timeSpent: {
         sessions: []
       }
     },
     projects: [],
     experiments: [],
+    quests: [], // активные и завершенные квесты
     achievements: [
       {
         id: "first-dollar",
@@ -187,8 +189,74 @@ export function logEvent(state, event) {
     timestamp: new Date().toISOString(),
     type: event.type,
     value: event.value || 0,
-    source: event.source || "unknown"
+    source: event.source || "unknown",
+    metadata: event.metadata || {}
   };
   state.eventLog.push(entry);
+  
+  // Ограничиваем размер лога до последних 100 событий
+  if (state.eventLog.length > 100) {
+    state.eventLog = state.eventLog.slice(-100);
+  }
+  
   return entry;
+}
+
+// --- Quests ---
+
+export function createQuest(state, data) {
+  const now = new Date().toISOString();
+  const quest = {
+    id: generateId("q"),
+    title: data.title,
+    description: data.description,
+    type: data.type || "generic", // generic | timed | milestone
+    status: "active", // active | completed | failed | expired
+    progress: 0,
+    targetProgress: data.targetProgress || 1,
+    reward: data.reward || { xp: 0, xpBoost: 0 },
+    deadline: data.deadline || null, // ISO timestamp или null
+    createdAt: now,
+    updatedAt: now,
+    completedAt: null,
+    conditions: data.conditions || {} // условия для проверки
+  };
+  
+  state.quests.push(quest);
+  logEvent(state, { 
+    type: "quest_started", 
+    value: 1, 
+    source: quest.id,
+    metadata: { questTitle: quest.title }
+  });
+  
+  return quest;
+}
+
+export function updateQuest(state, questId, patch) {
+  const quest = state.quests.find(q => q.id === questId);
+  if (!quest) return null;
+  
+  Object.assign(quest, patch);
+  quest.updatedAt = new Date().toISOString();
+  
+  return quest;
+}
+
+export function completeQuest(state, questId) {
+  const quest = state.quests.find(q => q.id === questId);
+  if (!quest || quest.status !== "active") return null;
+  
+  quest.status = "completed";
+  quest.completedAt = new Date().toISOString();
+  quest.updatedAt = quest.completedAt;
+  
+  logEvent(state, {
+    type: "quest_completed",
+    value: 1,
+    source: quest.id,
+    metadata: { questTitle: quest.title, reward: quest.reward }
+  });
+  
+  return quest;
 }

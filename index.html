@@ -16,11 +16,22 @@
       <button class="tab-button active" data-screen="dashboard">Dashboard</button>
       <button class="tab-button" data-screen="projects">Projects</button>
       <button class="tab-button" data-screen="experiments">Experiments</button>
+      <button class="tab-button" data-screen="quests">Quests</button>
     </nav>
 
     <main class="app-main">
       <!-- SCREEN: DASHBOARD -->
       <section id="screen-dashboard" class="screen active">
+        <!-- Quick Actions -->
+        <section class="quick-actions panel">
+          <h3>Быстрые действия</h3>
+          <div class="quick-buttons">
+            <button id="quickAddProject" class="quick-btn">➕ Новая идея</button>
+            <button id="quickAddExperiment" class="quick-btn">🧪 Эксперимент</button>
+            <button id="quickAddRevenue" class="quick-btn">💰 Доход</button>
+          </div>
+        </section>
+
         <section class="dashboard">
           <h2>Дашборд</h2>
           <div class="dashboard-stats">
@@ -33,6 +44,10 @@
               <span class="value"><span id="xp">-</span> / <span id="xpToNext">-</span></span>
             </div>
             <div class="stat">
+              <span class="label">XP Boost</span>
+              <span class="value" id="xpBoost">1.0x</span>
+            </div>
+            <div class="stat">
               <span class="label">Streak (дней)</span>
               <span class="value" id="streak">-</span>
             </div>
@@ -42,9 +57,31 @@
             </div>
           </div>
 
+          <!-- Графики -->
+          <div class="charts-container">
+            <div class="chart-wrapper">
+              <div id="xpChart"></div>
+            </div>
+            <div class="chart-wrapper">
+              <div id="revenueChart"></div>
+            </div>
+          </div>
+
+          <!-- Active Quests Preview -->
+          <div class="active-quests-preview">
+            <h3>Активные квесты</h3>
+            <div id="activeQuestsPreview"></div>
+          </div>
+
           <div class="achievements">
             <h3>Ачивки</h3>
             <ul id="achievementsList"></ul>
+          </div>
+
+          <!-- Event Log -->
+          <div class="event-log">
+            <h3>Последние действия</h3>
+            <div id="eventLogList"></div>
           </div>
         </section>
       </section>
@@ -62,6 +99,20 @@
             />
             <button type="submit">Добавить идею</button>
           </form>
+
+          <!-- Filters -->
+          <div class="filters">
+            <select id="filterStatus">
+              <option value="">Все стадии</option>
+              <option value="idea">Idea</option>
+              <option value="validating">Validating</option>
+              <option value="designing">Designing</option>
+              <option value="building">Building</option>
+              <option value="launched">Launched</option>
+              <option value="scaling">Scaling</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
 
           <div id="projectsList" class="projects-list"></div>
         </section>
@@ -108,6 +159,21 @@
           </form>
 
           <div id="experimentsList" class="experiments-list"></div>
+        </section>
+      </section>
+
+      <!-- SCREEN: QUESTS -->
+      <section id="screen-quests" class="screen">
+        <section class="panel">
+          <h2>🎯 Квесты</h2>
+          
+          <div class="quests-tabs">
+            <button class="quest-tab active" data-quest-filter="active">Активные</button>
+            <button class="quest-tab" data-quest-filter="completed">Завершенные</button>
+            <button class="quest-tab" data-quest-filter="all">Все</button>
+          </div>
+
+          <div id="questsList" class="quests-list"></div>
         </section>
       </section>
     </main>
