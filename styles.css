@@ -1,0 +1,165 @@
+/* Минимальная стилизация, чтобы было приятно пользоваться. */
+/* styles.css */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+.app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.app-header h1 {
+  margin: 0 0 4px;
+}
+
+.app-main {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+.dashboard {
+  grid-column: 1 / 3;
+  background: #111827;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #1f2937;
+}
+
+.dashboard-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.stat {
+  min-width: 140px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #020617;
+  border: 1px solid #1f2937;
+}
+
+.stat .label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.stat .value {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.achievements h3 {
+  margin: 8px 0;
+}
+
+.achievements ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+}
+
+.panel {
+  background: #111827;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #1f2937;
+}
+
+.form-inline {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.form-inline input,
+.form-inline select {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+.form-inline button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #22c55e;
+  color: #022c22;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.form-inline button:hover {
+  background: #16a34a;
+}
+
+.projects-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-card {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #020617;
+  border: 1px solid #1f2937;
+}
+
+.project-header {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.project-meta {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.project-meta select {
+  margin-left: 4px;
+  font-size: 12px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  background: #020617;
+  color: #e5e7eb;
+}
+
+.project-revenue {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .app-main {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .dashboard {
+    grid-column: 1 / 2;
+  }
+}
